@@ -1,105 +1,151 @@
 '''
-A gen tree is a genealogical tree. It's basically a graph with level tracking,
-so determining relationships is sanely possible.
+This GenTree has all the data of the family relationships, that is, inmutable relationships
 
-This gen tree must start with two starting NPCs
+These are the existing relationships:
+- Parent-child
+- Sibling
+- Partner
 
-This graph must store the following:
-- An NPC reference
-- A reference to all of the NPC's it has a relationship with
-- The distance to that relationship
-
-So it would look something like this:
-graph: {
-    'NPC 1': {
-        'NPC 2': 1,
-        'NPC 3': 2
+The mesh stores data in this way:
+mesh = {
+    child: {
+        parent_1: parent-child,
+        parent_2: parent-child
     },
-    'NPC 2': {
-        'NPC 1': 1,
-        'NPC 3': 1,
+    parent_1: {
+        child: parent-child,
+        parent_2: partner
     },
-    'NPC 3': {
-        'NPC 1': 2,
-        'NPC 2': 1
+    parent_2: {
+        child: parent-child,
+        parent_1: partner
     }
 }
+
+Now, how about incest?
+Picture this: Adan and Eva have a son, now, that man has a child with Eva, his
+mother. What should it be? Say that the baby is a woman. Now, that woman is the daughter of
+the son, but also his sister. Now this: the son has a child WITH his sister.
+
+Now, this is the thing: Adan and Eva are gen 0, cause they're founders.
+The son is gen 1, cause is the first child. Now, the sister-daughter must be in the same
+gen as the son, cause it's the child of Eva. When brother and sister have a child, that child
+is now gen 2. If for example the sister had a child with Adan, then that child would be gen 1 too.
+
+Alright, that makes this soo complicated. Let's do it so there can't be inter-gen breeding.
+But then, far cousins couldn't have children?
 '''
 
+from enum import Enum
 from .NPC import NPC
 
-RELATION_TYPES = (
-    'parent',
-    'child',
-    'sibling'
-)
-
-
-class DistanceMatrix:
-    __matrix: dict[NPC:dict[NPC:int]]
-
-    def __init__(self):
-        self.__matrix = {}
-
-    def get_distance(self, npc1: NPC, npc2: NPC) -> int:
-        dist1 = self.__matrix.get(npc1, {}).get(npc2)
-        dist2 = self.__matrix.get(npc2, {}).get(npc1)
-
-        if dist1 != dist2:
-            raise DistMatrixInconsistencyError("Inconsistency in distances")
-        
-        return dist1
-    
-    
-    def insert_distance(self, npc1: NPC, npc2: NPC, dist: int) -> None:
-        # initialize sub-objects if they don't exist
-        if npc1 not in self.__matrix:
-            self.__matrix[npc1] = {}
-        if npc2 not in self.__matrix:
-            self.__matrix[npc2] = {}
-        
-        # set the distances on the sub-objects
-        self.__matrix[npc1][npc2] = dist
-        self.__matrix[npc2][npc1] = dist
-    
-    def print_matrix(self):
-        for npc1, relations in self.__matrix.items():
-            for npc2, dist in relations.items():
-                print(f'{npc1.get_name()} <-> {npc2.get_name()}: {dist}')
-
+class RelationType(Enum):
+    PARENT_CHILD = 0
+    SIBLING = 1
 
 class GenTree:
-    __distMat: DistanceMatrix
-    __generation_dict: dict[NPC:int]
+    __mesh: dict[NPC:dict[NPC:str]]
+    __people_counter: int
 
-    def __init__(self, npc1: NPC, npc2: NPC):
-        self.__distMat = DistanceMatrix()
 
-        # add the first two relationships from Adan and Eva
-        self.__distMat.insert_distance(npc1, npc2, 1)
+    def __init__(self, adan: NPC, eva: NPC):
+        self.__mesh = {}
+        self.__people_counter = 0
+
+        # set the ids
+        eva.set_id(1)
+        adan.set_id(2)
+
+        self.__mesh[adan] = {}
+        self.__mesh[eva] = {}
+
+        # set the generation for these folks - it's 0, cause they're founders
+        adan.set_gen(0)
+        eva.set_gen(0)
+
+        # add two to the counter
+        self.__people_counter += 2
+
+
+
+    def get_relations(self, npc: NPC) -> dict[NPC:str]:
+        return self.__mesh.get(npc, {})
     
 
-    def get_generation(self, npc: NPC) -> int:
-        return self.__generation_dict[npc]
-    
-    def get_dist_mat(self) -> DistanceMatrix:
-        return self.__distMat
-    
-    def get_relationship(self, n1: NPC, n2: NPC) -> dict[NPC:str]:
-        # we need their generation and their distance
-        gen1 = self.get_generation(n1)
-        gen2 = self.get_generation(n2)
-        dist = self.__distMat.get_distance(n1, n2)
-
-        '''
-        Rules for relationships:
+    # Adding new people to these trees only happens when one is born, so
+    # two parents must be involved to start
+    def add_npc(self, npc: NPC, parent1: NPC, parent2: NPC) -> None: # Breed!
+        # New NPC cannot be in mesh
+        if npc in self.__mesh:
+            raise GenTreeIntegrityError("New NPC already in mesh")
         
-        '''
+        # Both parents must be already in mesh
+        if parent1 not in self.__mesh or parent2 not in self.__mesh:
+            raise GenTreeIntegrityError("Parents aren't on mesh")
+        
+        # parents must be on the same generation - sorry!
+        if parent1.get_gen() != parent2.get_gen():
+            raise GenTreeIntegrityError("Parents must be of the same generation")
+        
+        # MUST DO BEFORE MAP MANIPULATION
+        # update counter
+        self.__people_counter += 1
+
+        # update id
+        npc.set_id(self.__people_counter)
 
 
-class DistMatrixInconsistencyError(Exception):
+        # add the new npc
+        self.__mesh[npc] = {}
+
+        # set the npc generation
+        npc.set_gen(parent1.get_gen() + 1)
+
+        # add the parent relationship
+        self.__mesh[npc][parent1] = RelationType.PARENT_CHILD
+        self.__mesh[npc][parent2] = RelationType.PARENT_CHILD
+
+        # add the relationships to the parents too
+        self.__mesh[parent1][npc] = RelationType.PARENT_CHILD
+        self.__mesh[parent2][npc] = RelationType.PARENT_CHILD
+
+        # determine brothers too
+        # relation with parents
+        possible_siblings = set()
+        for person, relation in self.__mesh[parent1].items():
+            if relation == RelationType.PARENT_CHILD:
+                possible_siblings.add(person)
+        
+        for person, relation in self.__mesh[parent2].items():
+            if relation == RelationType.PARENT_CHILD:
+                possible_siblings.add(person)
+        
+        # same gen people
+        same_gen = set()
+        for person in possible_siblings:
+            if person.get_gen() == npc.get_gen() and person != npc:
+                same_gen.add(person)
+        
+        # set the relationships
+        for person in same_gen:
+            self.__mesh[person][npc] = RelationType.SIBLING
+            self.__mesh[npc][person] = RelationType.SIBLING
+
+
+    def print_mesh(self):
+        visited = []
+        print(f'Persons in mesh: {len(self.__mesh)}')
+        for person, relations in self.__mesh.items():
+            print(f'Person: {person} - relations: {len(relations)}')
+            if person in visited:
+                continue
+            visited.append(person)
+
+            for relation, type in relations.items():
+                print(f'{person} <-> {relation}: {type.name}')
+        
+
+
+class GenTreeIntegrityError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
-
-def simulate_generation(tree: GenTree) -> None:
-    pass
