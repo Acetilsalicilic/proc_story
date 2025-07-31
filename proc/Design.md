@@ -48,6 +48,17 @@ Well, I think of these:
 
 All these must be generated initialy, and will evolve with gameplay, maybe with the exception of personality. We'll see.
 
-#### NPC generation process
-These are more or less the steps to generate an npc:
-1. Basically, we must first simulate a family tree. Starting from parents, we'll have some children randomly generated with names alleatory and gender based on some prob tables, as well as number of children. Then, we'll just redo all the work, maybe spawning some partners for these creatures so we don't have incest (maybe some incest for first versions is good)
+## NPC stuff
+### Relationsips
+There are complicated. But there are mainly two kinds of relationships:
+- Family, that are created when one is born and won't ever change
+- Arbitrary, like everything else like lovers, friends, rivals, etc. These change and evolve, are created dynamically and independant on family relationships.
+These two types are independant, at least, they don't depend directly, but maybe social rules and stuff can make so cousins won't want to be partners too.
+
+One must generate the two types of relations on the simulation.
+
+Family is easy, just static analysis of the genealogical tree to determine, when an NPC is born, the relationships it has.
+
+_**Every NPC has a Gen tree. No one appears from nowhere, except maybe GenTree founders, Adan and Eva**_
+
+On the other hand, dynamic relationships are the interesting and fun part.
