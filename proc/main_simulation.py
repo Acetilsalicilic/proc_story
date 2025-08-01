@@ -4,6 +4,7 @@ This script is responsible for the simulation proces BEFORE gameplay
 For now, this only simulates family tree creation
 '''
 
+from enum import Enum
 from proc.npc.GenTree import GenTree
 from proc.npc.GenTree import create_tree
 from proc.npc.NPC import create_npc
@@ -17,12 +18,16 @@ class SimulationError(Exception):
     
     def get_message(self) -> str:
         return self.__message
+    
+class GenerationInfoField(Enum):
+    NPC_COUNT = 0
 
 
 class ProceduralSimulation:
     __trees: list[GenTree]
     __tree_goal: int
     __simulated: bool
+    __generation_info: dict
 
     # TODO: Implement file-logging system - Maybe a third party logger??
 
@@ -30,6 +35,7 @@ class ProceduralSimulation:
         self.__tree_goal = tree_no
         self.__simulated = False
         self.__trees = []
+        self.__generation_info = {}
 
     def simulate(self, steps: int):
         # simulation can run only once
@@ -45,8 +51,10 @@ class ProceduralSimulation:
         # Procceed with the simulation
         for step in range(steps):
             print(f'Step: {step + 1} of {steps}')
+            self.__generation_info[step] = {}
 
             # We must traverse each tree
+            npc_count = 0
             for tree in self.__trees:
                 # We must decide who will breed with who
                 visited = []
@@ -71,6 +79,10 @@ class ProceduralSimulation:
                         tree.add_npc(child, npc, partner)
                     except:
                         self.cancel_simulation(SimulationError(f'{npc} tried to mate with {partner}'))
+                    
+                npc_count += tree.get_npc_count()
+            
+            self.__generation_info[step][GenerationInfoField.NPC_COUNT] = npc_count
         print('---SIMULATION FINISHED---')
 
     def cancel_simulation(self, exception: SimulationError):
@@ -101,6 +113,14 @@ class ProceduralSimulation:
             print(f'Tree {index}:')
             tree.print_mesh()
         print('***END TREES***')
+
+        # detailed generation info
+        print('*** GENERATION INFO ***')
+        for line, contents in self.__generation_info.items():
+            print(f'{line + 1}:')
+            for field, value in contents.items():
+                print(f'    {field.name} - {value}')
+        print('*** END GENERATION INFO ***')
         print('### END REPORT ###')
 
 
