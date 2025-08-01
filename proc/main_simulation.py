@@ -24,6 +24,8 @@ class ProceduralSimulation:
     __tree_goal: int
     __simulated: bool
 
+    # TODO: Implement file-logging system - Maybe a third party logger??
+
     def __init__(self, tree_no: int):
         self.__tree_goal = tree_no
         self.__simulated = False
@@ -42,7 +44,7 @@ class ProceduralSimulation:
 
         # Procceed with the simulation
         for step in range(steps):
-            print(f'Step: {step} of {steps}')
+            print(f'Step: {step + 1} of {steps}')
 
             # We must traverse each tree
             for tree in self.__trees:
@@ -57,9 +59,8 @@ class ProceduralSimulation:
                         partner = tree.calc_best_attraction(npc)
                     except:
                         self.cancel_simulation(SimulationError(f'Failed to determine a partner for {npc}'))
-                    
-                    try:
 
+                    try:
                         visited.append(npc)
                         visited.append(partner)
 
