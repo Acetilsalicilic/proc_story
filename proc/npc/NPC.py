@@ -79,40 +79,30 @@ class NPC:
         sum_compat_good = 0
         sum_weights_good = 0
 
-        if len(good_wishes) == 0:
-            raise Exception(f"At least one good wish is required for {self}")
-
         for trait, weight in good_wishes.items():
-            print(f'Good trait: {trait.name}')
             sum_weights_good += weight
 
             difference = abs(weight - other_traits.get(trait, 0))
 
             compat = weight * (1 - (difference / MAX_TRAIT_VALUE))
             sum_compat_good += compat
-            print(f'weight: {sum_weights_good}\ncompat: {sum_compat_good}')
         
-        total_good = sum_compat_good / sum_weights_good
+        total_good = sum_compat_good / sum_weights_good if sum_weights_good != 0 else 0
 
         # bad
         bad_wishes = {trait:weight for trait, weight in self.__wishes_traits.items() if trait in NEGATIVE_TRAITS}
         sum_compat_bad = 0
         sum_weights_bad = 0
 
-        if len(bad_wishes) == 0:
-            raise Exception("At least one bad wish is required")
-
         for trait, weight in bad_wishes.items():
-            print(f'Bad trait: {trait.name}')
             sum_weights_bad += weight
 
             difference = abs(weight - other_traits.get(trait, 0))
 
             compat = weight * (1 - (difference / MAX_TRAIT_VALUE))
             sum_compat_bad += compat
-            print(f'weight: {sum_weights_bad}\ncompat: {sum_compat_bad}')
         
-        total_bad = sum_compat_bad / sum_weights_bad
+        total_bad = sum_compat_bad / sum_weights_bad if sum_weights_bad != 0 else 0
 
         return total_good - total_bad
 

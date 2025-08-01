@@ -142,7 +142,6 @@ class GenTree:
             raise GenTreeIntegrityError("NPC must be in mesh")
         
         same_gen = [other for other in self.get_npcs() if other.get_gen() == npc.get_gen() and other != npc]
-        print(same_gen)
 
         # determine who has the best attraction
         best_attraction = float('-inf')
