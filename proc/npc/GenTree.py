@@ -37,7 +37,7 @@ But then, far cousins couldn't have children?
 '''
 
 from enum import Enum
-from .NPC import NPC
+from .NPC import NPC, NPCError, calculate_mutual_compat, create_npc
 
 class RelationType(Enum):
     PARENT_CHILD = 0
@@ -62,7 +62,6 @@ class GenTree:
         self.__people_counter += 2
 
 
-
     def get_relations(self, npc: NPC) -> dict[NPC:str]:
         return self.__mesh.get(npc, {})
     
@@ -73,6 +72,10 @@ class GenTree:
         # New NPC cannot be in mesh
         if npc in self.__mesh:
             raise GenTreeIntegrityError("New NPC already in mesh")
+        
+        # Cannot ue the same NPC for breeding
+        if parent1 == parent2:
+            raise GenTreeIntegrityError("Parents cannot be the same NPC")
         
         # Both parents must be already in mesh
         if parent1 not in self.__mesh or parent2 not in self.__mesh:
@@ -130,9 +133,44 @@ class GenTree:
 
             for relation, type in relations.items():
                 print(f'{person} <-> {relation}: {type.name}')
+    
+
+    def calc_best_attraction(self, npc: NPC) -> NPC:
+        # We must visit all the npcs of the same generation, and then see which has the
+        # most mutual attraction
+        if npc not in self.__mesh:
+            raise GenTreeIntegrityError("NPC must be in mesh")
+        
+        same_gen = [other for other in self.get_npcs() if other.get_gen() == npc.get_gen() and other != npc]
+        print(same_gen)
+
+        # determine who has the best attraction
+        best_attraction = float('-inf')
+        best_partner = None
+
+        for other in same_gen:
+            attraction = calculate_mutual_compat(npc, other)
+            if attraction > best_attraction:
+                best_attraction = attraction
+                best_partner = other
+        
+        return best_partner
+
+    def get_npcs(self) -> tuple[NPC]:
+        return tuple(self.__mesh.keys())
+
+    def get_npc_count(self) -> int:
+        return len(self.__mesh)
         
 
 
 class GenTreeIntegrityError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
+
+
+def create_tree() -> GenTree:
+    adan = create_npc('Adan')
+    eva = create_npc('Eva')
+
+    return GenTree(adan, eva)

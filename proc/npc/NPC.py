@@ -1,10 +1,13 @@
 from enum import Enum
+import random
 import uuid
 
+
 class TraitNames(Enum):
-    FUNNY = 'funny'
-    SERIOUS = 'serious'
-    IRRITABLE = 'irritable'
+    FUNNY = 0
+    SERIOUS = 1
+    IRRITABLE = 2
+    DEPRESSIVE = 3
 
 POSITIVE_TRAITS = [
     TraitNames.FUNNY,
@@ -12,7 +15,8 @@ POSITIVE_TRAITS = [
 ]
 
 NEGATIVE_TRAITS = [
-    TraitNames.IRRITABLE
+    TraitNames.IRRITABLE,
+    TraitNames.DEPRESSIVE
 ]
 
 MAX_TRAIT_VALUE = 5
@@ -69,14 +73,14 @@ class NPC:
             raise Exception('Trait value cannot be negative')
         self.__wishes_traits[trait] = value
     
-    def calc_attraction(self, other_traits: dict[TraitNames:int]):
+    def calc_attraction(self, other_traits: dict[TraitNames:int]) -> float:
         # good traits
         good_wishes = {trait:weight for trait, weight in self.__wishes_traits.items() if trait in POSITIVE_TRAITS}
         sum_compat_good = 0
         sum_weights_good = 0
 
         if len(good_wishes) == 0:
-            raise Exception("At least one good wish is required")
+            raise Exception(f"At least one good wish is required for {self}")
 
         for trait, weight in good_wishes.items():
             print(f'Good trait: {trait.name}')
@@ -113,6 +117,39 @@ class NPC:
         return total_good - total_bad
 
 
+def calculate_mutual_compat(n1: NPC, n2: NPC) -> float:
+    first = n1.calc_attraction(n2.get_own_traits())
+    second = n2.calc_attraction(n1.get_own_traits())
+    return (first + second) / 2
+
+
+def create_npc(name: str = '', parent1: NPC = None, parent2: NPC = None) -> NPC:
+    if not name:
+        new_name = parent1.get_name().split(' ')[0] + ' ' + parent2.get_name().split(' ')[0]
+        npc = NPC(new_name)
+    else:
+        npc = NPC(name)
+
+    # define the traits
+    for trait in TraitNames:
+        will_have = random.random() > 0.5
+
+        if will_have:
+            npc.update_own_trait(trait, random.randint(1, MAX_TRAIT_VALUE))
+    
+    # define the wishes
+    for trait in TraitNames:
+        will_wish = random.random() > 0.5
+
+        if will_wish:
+            npc.update_wished_trait(trait, random.randint(1, MAX_TRAIT_VALUE))
+    
+    return npc
+
+
+class NPCError(Exception):
+    def __init__(self, message: str):
+        super().__init__(message)
 '''
         Desirability
         < 0 - bad
