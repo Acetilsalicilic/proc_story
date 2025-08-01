@@ -45,16 +45,11 @@ class RelationType(Enum):
 
 class GenTree:
     __mesh: dict[NPC:dict[NPC:str]]
-    __people_counter: int
 
 
     def __init__(self, adan: NPC, eva: NPC):
         self.__mesh = {}
         self.__people_counter = 0
-
-        # set the ids
-        eva.set_id(1)
-        adan.set_id(2)
 
         self.__mesh[adan] = {}
         self.__mesh[eva] = {}
@@ -86,14 +81,6 @@ class GenTree:
         # parents must be on the same generation - sorry!
         if parent1.get_gen() != parent2.get_gen():
             raise GenTreeIntegrityError("Parents must be of the same generation")
-        
-        # MUST DO BEFORE MAP MANIPULATION
-        # update counter
-        self.__people_counter += 1
-
-        # update id
-        npc.set_id(self.__people_counter)
-
 
         # add the new npc
         self.__mesh[npc] = {}
