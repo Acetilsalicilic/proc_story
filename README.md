@@ -36,4 +36,5 @@ I chose python cause of ease of use. I don't want to fight with C++ quirks or C 
 ## Running
 Why would you want to run this thing?
 
-Currently, it doesn't work. Not even a little. So there's no way of running it. If you really want to, go code it yourself or go play some good ol' DF.
+
+**UPDATE:** For now, only the family tree procedural generation kinda works. Go to _proc_gen_ branch for more info. The code is there.
