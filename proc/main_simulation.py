@@ -5,7 +5,9 @@ For now, this only simulates family tree creation
 '''
 
 from enum import Enum
-from proc.npc.GenTree import GenTree
+from sim_logging.ProcLogger import ProgressLogger
+from sim_logging.ProcLogger import SimReportLogger
+from proc.npc.GenTree import GenTree, RelationType
 from proc.npc.GenTree import create_tree
 from proc.npc.NPC import create_npc
 
@@ -29,13 +31,19 @@ class ProceduralSimulation:
     __simulated: bool
     __generation_info: dict
 
+    __proc_logger: ProgressLogger
+    __report_logger: SimReportLogger
+
     # TODO: Implement file-logging system - Maybe a third party logger??
 
-    def __init__(self, tree_no: int):
+    def __init__(self, tree_no: int, proc_logger: ProgressLogger, report_logger: SimReportLogger):
         self.__tree_goal = tree_no
         self.__simulated = False
         self.__trees = []
         self.__generation_info = {}
+
+        self.__proc_logger = proc_logger
+        self.__report_logger = report_logger
 
     def simulate(self, steps: int):
         # simulation can run only once
@@ -43,14 +51,14 @@ class ProceduralSimulation:
             raise SimulationError("This simulation has already been run")
         self.__simulated = True
 
-        print('---SIMULATION STARTS---')
+        self.__proc_logger.start_report()
         # get the trees
         for i in range(self.__tree_goal):
             self.__trees.append(create_tree())
 
         # Procceed with the simulation
         for step in range(steps):
-            print(f'Step: {step + 1} of {steps}')
+            self.__proc_logger.print_step(step + 1, steps)
             self.__generation_info[step] = {}
 
             # We must traverse each tree
@@ -83,7 +91,7 @@ class ProceduralSimulation:
                 npc_count += tree.get_npc_count()
             
             self.__generation_info[step][GenerationInfoField.NPC_COUNT] = npc_count
-        print('---SIMULATION FINISHED---')
+        self.__proc_logger.end_report()
 
     def cancel_simulation(self, exception: SimulationError):
         print('+++ SIMULATION ABORTED +++')
@@ -100,27 +108,17 @@ class ProceduralSimulation:
         raise exception
     
     def report_simulation(self) -> None:
-        print('### REPORT ###')
-        print(f'{len(self.__trees)} created')
-        npc_count = 0
-        for tree in self.__trees:
-            npc_count += tree.get_npc_count()
-        print(f'{npc_count} NPCs created')
+        self.__report_logger.start_report()
+        self.__report_logger.basic_stats(self.__trees)
 
         # print trees
-        print('***TREES***')
-        for index, tree in enumerate(self.__trees):
-            print(f'Tree {index}:')
-            tree.print_mesh()
-        print('***END TREES***')
+        self.__report_logger.print_trees(self.__trees)
 
         # detailed generation info
-        print('*** GENERATION INFO ***')
-        for line, contents in self.__generation_info.items():
-            print(f'{line + 1}:')
-            for field, value in contents.items():
-                print(f'    {field.name} - {value}')
-        print('*** END GENERATION INFO ***')
-        print('### END REPORT ###')
+        self.__report_logger.gen_info(self.__generation_info)
 
+        # detailed npc info
+        self.__report_logger.detailed_npc_info(self.__trees)
 
+        # end
+        self.__report_logger.end_report()

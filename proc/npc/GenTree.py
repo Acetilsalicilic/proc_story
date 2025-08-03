@@ -44,7 +44,7 @@ class RelationType(Enum):
     SIBLING = 1
 
 class GenTree:
-    __mesh: dict[NPC:dict[NPC:str]]
+    __mesh: dict[NPC:dict[NPC:RelationType]]
 
 
     def __init__(self, adan: NPC, eva: NPC):
@@ -62,7 +62,7 @@ class GenTree:
         self.__people_counter += 2
 
 
-    def get_relations(self, npc: NPC) -> dict[NPC:str]:
+    def get_relations(self, npc: NPC) -> dict[NPC:RelationType]:
         return self.__mesh.get(npc, {})
     
 
@@ -120,19 +120,23 @@ class GenTree:
         for person in same_gen:
             self.__mesh[person][npc] = RelationType.SIBLING
             self.__mesh[npc][person] = RelationType.SIBLING
+    
 
-
-    def print_mesh(self):
+    def get_str_mesh(self) -> list[str]:
+        lines = list()
         visited = []
-        print(f'Persons in mesh: {len(self.__mesh)}')
+
+        lines.append(f'Persons in mesh: {len(self.__mesh)}')
         for person, relations in self.__mesh.items():
-            print(f'Person: {person} - relations: {len(relations)}')
+            lines.append(f'p: {person} - relations: {len(relations)}')
             if person in visited:
                 continue
             visited.append(person)
 
             for relation, type in relations.items():
-                print(f'{person} <-> {relation}: {type.name}')
+                lines.append(f'{person} <-> {relation}: {type.name}')
+        
+        return lines
     
 
     def calc_best_attraction(self, npc: NPC) -> NPC:

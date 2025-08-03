@@ -62,6 +62,9 @@ class NPC:
     
     def get_own_traits(self) -> dict[TraitNames:int]:
         return self.__own_traits
+    
+    def get_woshed_traits(self) -> dict[TraitNames:int]:
+        return self.__wishes_traits
 
     def update_own_trait(self, trait: TraitNames, value: int) -> None:
         if value < 0:
