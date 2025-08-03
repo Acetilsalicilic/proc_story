@@ -5,21 +5,12 @@ For now, this only simulates family tree creation
 '''
 
 from enum import Enum
-from sim_logging.ProcLogger import ProgressLogger
+from sim_logging.ProcLogger import ProgressLogger, SimAbortLogger
 from sim_logging.ProcLogger import SimReportLogger
 from proc.npc.GenTree import GenTree, RelationType
 from proc.npc.GenTree import create_tree
 from proc.npc.NPC import create_npc
-
-
-class SimulationError(Exception):
-    __message: str
-    def __init__(self, message: str):
-        self.__message = message
-        super().__init__(message)
-    
-    def get_message(self) -> str:
-        return self.__message
+from .SimulationError import SimulationError
     
 class GenerationInfoField(Enum):
     NPC_COUNT = 0
@@ -33,10 +24,11 @@ class ProceduralSimulation:
 
     __proc_logger: ProgressLogger
     __report_logger: SimReportLogger
+    __abort_logger: SimAbortLogger
 
     # TODO: Implement file-logging system - Maybe a third party logger??
 
-    def __init__(self, tree_no: int, proc_logger: ProgressLogger, report_logger: SimReportLogger):
+    def __init__(self, tree_no: int, proc_logger: ProgressLogger, report_logger: SimReportLogger, abort_logger: SimAbortLogger):
         self.__tree_goal = tree_no
         self.__simulated = False
         self.__trees = []
@@ -44,6 +36,7 @@ class ProceduralSimulation:
 
         self.__proc_logger = proc_logger
         self.__report_logger = report_logger
+        self.__abort_logger = abort_logger
 
     def simulate(self, steps: int):
         # simulation can run only once
@@ -94,18 +87,10 @@ class ProceduralSimulation:
         self.__proc_logger.end_report()
 
     def cancel_simulation(self, exception: SimulationError):
-        print('+++ SIMULATION ABORTED +++')
-
-        print(f'Cause: {type(exception)}, message: {exception.get_message()}')
-
-        print('***TREES***')
-        for index, tree in enumerate(self.__trees):
-            print(f'Tree {index}:')
-            tree.print_mesh()
-        print('***END TREES***')
-        print('*** END ABORT ***')
-
-        raise exception
+        self.__abort_logger.abort_simulation(exception)
+        self.__abort_logger.print_trees(self.__trees)
+        self.__abort_logger.end_abort()
+    
     
     def report_simulation(self) -> None:
         self.__report_logger.start_report()
