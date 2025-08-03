@@ -94,6 +94,10 @@ class NPC:
 
         # bad
         bad_wishes = {trait:weight for trait, weight in self.__wishes_traits.items() if trait in NEGATIVE_TRAITS}
+
+        if len(bad_wishes) < 1:
+            raise NPCError('At least one bad wished trait is required')
+
         sum_compat_bad = 0
         sum_weights_bad = 0
 
