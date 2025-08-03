@@ -1,7 +1,8 @@
 from enum import Enum
 import logging
-from sys import stdout
+from sys import exception, stderr, stdout
 
+from proc.SimulationError import SimulationError
 from proc.npc.GenTree import GenTree
 
 class LoggingError(Exception):
@@ -15,7 +16,7 @@ class ProgressLogger:
 
     def __init__(self, filename: str, module_name: str, name: str = 'ProgressLogger', mode: str = 'w'):
         self.__started = False
-        self.__logger = logging.getLogger(f'{module_name}.progress_logger')
+        self.__logger = logging.getLogger(f'{module_name}.{name}')
         self.__logger.setLevel(logging.INFO)
 
         # set the format fot this thing
@@ -50,7 +51,7 @@ class SimReportLogger:
     __logger: logging.Logger
 
     def __init__(self, filename: str, module_name: str, name: str = 'ReportLogger', mode: str = 'a', level: any = logging.DEBUG):
-        self.__logger = logging.getLogger(f'{module_name}.report_logger')
+        self.__logger = logging.getLogger(f'{module_name}.{name}')
         self.__logger.setLevel(level)
 
         formatter = logging.Formatter('Report: %(message)s')
@@ -119,4 +120,44 @@ class SimReportLogger:
         self.__logger.debug('*** END NPC INFO ***')
 
 class SimAbortLogger:
-    pass
+    __logger: logging.Logger
+    __exception: Exception
+
+    def __init__(self, filename: str, module_name: str, name: str = 'AbortLogger', mode: str = 'a'):
+        self.__logger = logging.getLogger(f'{module_name}.{name}')
+        self.__logger.setLevel(logging.DEBUG)
+
+        formatter = logging.Formatter('ABORT - %(levelname)s: %(message)s')
+        file_handler = logging.FileHandler(filename, mode, 'utf-8')
+        stderr_handler = logging.StreamHandler(stderr)
+
+        file_handler.setFormatter(formatter)
+        stderr_handler.setFormatter(formatter)
+
+        self.__logger.addHandler(file_handler)
+        self.__logger.addHandler(stderr_handler)
+    
+
+    def abort_simulation(self, exception: SimulationError):
+        self.__logger.error('+++ SIMULATION ABORTED +++')
+        self.__logger.error(f'Cause: {type(exception)}, message: {exception.get_message()}')
+        self.__logger.exception(exception)
+
+        self.__exception = exception
+    
+
+    def end_abort(self):
+        self.__logger.error('+++ END ABORT +++')
+
+        raise self.__exception
+    
+
+    def print_trees(self, trees: list[GenTree]):
+        self.__logger.error('*** TREES ***')
+        tree_count = len(trees)
+        for index, tree in enumerate(trees):
+            self.__logger.error(f'Tree {index + 1} of {tree_count}')
+            lines = tree.get_str_mesh()
+            for line in lines:
+                self.__logger.error(line)
+        self.__logger.error('*** END TREES ***')
