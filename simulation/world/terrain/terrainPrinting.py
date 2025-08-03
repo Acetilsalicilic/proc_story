@@ -1,5 +1,4 @@
-from simulation.world.Cell import CellParameters
-from simulation.world.terrain.Terrain import Terrain
+from simulation.world.terrain.terrain import Terrain
 
 def get_terrain_str_repr(cell_grid: Terrain) -> list[str]:
     lines = list()
@@ -9,7 +8,7 @@ def get_terrain_str_repr(cell_grid: Terrain) -> list[str]:
         for col in range(cell_grid.size_y):
             # represent this as symbols
             symbol = ''
-            if cell_grid.cells[row][col].get_params().get(CellParameters.HUMIDITY) == 1:
+            if cell_grid.cells[row][col].humidity == 1:
                 symbol = '.'
             else:
                 symbol = '#'

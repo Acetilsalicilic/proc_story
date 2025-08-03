@@ -1,0 +1,24 @@
+{
+    "simulations": [
+        {
+            "name": "First",
+            "terrain": {
+                "size_x": 20,
+                "size_y": 20,
+                "seed": 5,
+                "frequency": 10.0,
+                "sea_level": 0.2
+            }
+        },
+        {
+            "name": "Second",
+            "terrain": {
+                "size_x": 20,
+                "size_y": 20,
+                "seed": 6,
+                "frequency": 10.0,
+                "sea_level": 0.2
+            }
+        }
+    ]
+}

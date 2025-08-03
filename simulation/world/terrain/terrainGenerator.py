@@ -3,19 +3,11 @@ This terrain generator creates a grid of n x m cells with the desired seed,
 being in charge of determining all the terrain and climate characteristics of this thing
 '''
 
-from enum import Enum
 import noise
 
-from simulation.world import Cell
-from simulation.world.terrain.Terrain import Terrain
-
-class TerrainRules(Enum):
-    SEED = 0
-    SIZE_X = 1
-    SIZE_Y = 2
-    FREQUENCY = 3
-
-    SEA_LEVEL = 4
+from simulation.world import cell
+from simulation.world.terrain.terrain import Terrain
+from simulation.config.terrainConfig import TerrainConfig
 
 
 class TerrainGenerator:
@@ -28,18 +20,18 @@ class TerrainGenerator:
     __noise_grid: list[list[float]]
 
     __populated: bool
-    __config: dict[TerrainRules:float]
+    __config: TerrainConfig
 
-    def __init__(self, config: dict[TerrainRules:float]):
+    def __init__(self, config: TerrainConfig):
         self.__config = config
 
-        self.__seed = int(config[TerrainRules.SEED])
+        self.__seed = config.seed
         self.__populated = False
 
-        self.__size_x = config[TerrainRules.SIZE_X]
-        self.__size_y = config[TerrainRules.SIZE_Y]
+        self.__size_x = config.size_x
+        self.__size_y = config.size_y
 
-        self.__frequency = config[TerrainRules.FREQUENCY]
+        self.__frequency = config.frequency
 
 
         # create the grid
@@ -72,14 +64,11 @@ class TerrainGenerator:
         for x_pos in range(self.__size_x):
             for y_pos in range(self.__size_y):
                 elevation = self.__noise_grid[x_pos][y_pos]
-                humidity = 1 if elevation < self.__config[TerrainRules.SEA_LEVEL] else 0
+                humidity = 1 if elevation < self.__config.sea_level else 0
 
-                cell_grid[x_pos][y_pos] = Cell.Cell({
-                    Cell.CellParameters.ELEVATION: elevation,
-                    Cell.CellParameters.HUMIDITY: humidity
-                })
+                cell_grid[x_pos][y_pos] = cell.Cell(elevation, humidity)
         
-        return Terrain((self.__size_x, self.__size_y), cell_grid, self.__noise_grid)
+        return Terrain(size_x=self.__size_x, size_y=self.__size_y, cells=cell_grid, noise=self.__noise_grid)
 
 
 class TerrainError(Exception):

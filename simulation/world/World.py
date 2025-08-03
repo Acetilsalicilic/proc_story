@@ -4,7 +4,7 @@ It's a single simulation unit. Contains all the info of the simulation.
 '''
 
 from world.organisations import WorldConfig
-from world.Cell import Cell
+from simulation.world.cell import Cell
 
 
 class World:
