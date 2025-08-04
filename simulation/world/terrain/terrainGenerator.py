@@ -68,7 +68,7 @@ class TerrainGenerator:
 
                 cell_grid[x_pos][y_pos] = cell.Cell(elevation, humidity)
         
-        return Terrain(size_x=self.__size_x, size_y=self.__size_y, cells=cell_grid, noise=self.__noise_grid)
+        return Terrain(size_x=self.__size_x, size_y=self.__size_y, cells=cell_grid, noise=self.__noise_grid, seed=self.__seed)
 
 
 class TerrainError(Exception):

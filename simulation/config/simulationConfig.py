@@ -8,3 +8,4 @@ from simulation.config.terrainConfig import TerrainConfig
 class SimulationConfig:
     terrain_conf: TerrainConfig
     name: str
+    log_file:str

@@ -11,3 +11,4 @@ class Terrain:
     size_y: int
     cells: list[list[Cell]]
     noise: list[list[float]]
+    seed: int

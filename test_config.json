@@ -2,6 +2,7 @@
     "simulations": [
         {
             "name": "First",
+            "log_file": "first.log",
             "terrain": {
                 "size_x": 20,
                 "size_y": 20,
@@ -12,6 +13,7 @@
         },
         {
             "name": "Second",
+            "log_file": "second.log",
             "terrain": {
                 "size_x": 20,
                 "size_y": 20,
